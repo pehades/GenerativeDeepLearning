@@ -1,7 +1,7 @@
 import pytest
 import torch
 
-from ml.gan.models import Discriminator, Generator
+from ml.dcgan.models import Discriminator, Generator
 
 
 class TestGAN:
@@ -10,17 +10,17 @@ class TestGAN:
 
         x = torch.ones((16, 1, 64, 64))
 
-        discriminator = Discriminator()
+        discriminator = Discriminator(n_channels=1)
 
         output = discriminator(x)
 
-        assert output.shape == (16, 1)
+        assert output.shape == (16, 1, 1, 1)
 
     def test_generator(self):
 
         x = torch.ones((16, 100))
 
-        generator = Generator()
+        generator = Generator(latent_dim=100, n_channels=1)
         output = generator(x)
 
         assert output.shape == (16, 1, 64, 64)

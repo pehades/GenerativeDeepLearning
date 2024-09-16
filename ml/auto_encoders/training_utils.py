@@ -20,17 +20,17 @@ def get_dataloader(batch_size: int):
     return DataLoader(training_data, batch_size=batch_size), training_data
 
 
-def plot_images(model: torch.nn.Module, X: torch.Tensor, device: str):
+def plot_images(model: torch.nn.Module, X: torch.Tensor, device: str, image_dimension = 32):
 
     number_of_images = X.shape[0]
 
     model.eval()
     with torch.no_grad():
         _, _, predicted_images = model(
-            X.reshape((number_of_images, 1, 32, 32)).to(device)
+            X.reshape((number_of_images, 1, image_dimension, image_dimension)).to(device)
         )
 
-        predicted_images = predicted_images.reshape(number_of_images, 32, 32).to('cpu')
+        predicted_images = predicted_images.reshape(number_of_images, image_dimension, image_dimension).to('cpu')
 
     model.train()
 
