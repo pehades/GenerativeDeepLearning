@@ -18,7 +18,7 @@ class AttentionBlock(nn.Module):
         self.W_V = nn.Linear(d_model, d_k)
         self.softmax = nn.Softmax(dim=1)
 
-    def forward(self, x):
+    def forward(self, x, mask: bool = True):
 
         # x has shape (N, L, d_model)
 
@@ -26,7 +26,15 @@ class AttentionBlock(nn.Module):
         k = self.W_K(x)  # shape of (N, L, d_k)
         v = self.W_V(x)  # shape of (N, L, d_k)
 
-        attention = self.softmax(torch.bmm(q, k.transpose(1, 2)) / math.sqrt(self.d_k))  # shape of (N, L, L)
+        L = x.shape[1]
+        zeros = torch.zeros((L, L))
+        if mask:
+            mask_tensor = torch.triu(zeros - torch.inf, diagonal=1)
+        else:
+            mask_tensor = zeros
+
+        # shape of (N, L, L)
+        attention = self.softmax(mask_tensor + torch.matmul(q, k.transpose(1, 2)) / math.sqrt(self.d_k))
 
         output = torch.bmm(attention, v)  # shape of (N, L, d_k)
 
@@ -42,11 +50,11 @@ class MultiHeadAttention(nn.Module):
         )
         self.W_concat = nn.Linear(d_k * n_heads, d_model)
 
-    def forward(self, x):
+    def forward(self, x, mask: bool = True):
 
         # x has shape (N, L, d_model)
         attention_heads = torch.cat(
-            [attention_head(x)[0] for attention_head in self.attention_heads], dim=-1
+            [attention_head(x, mask)[0] for attention_head in self.attention_heads], dim=-1
         )
         output = self.W_concat(attention_heads)
         return output
