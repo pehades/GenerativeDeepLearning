@@ -1,7 +1,9 @@
+from math import sin, cos
+
 import pytest
 import torch
 
-from ml.transformers.models import AttentionBlock, MultiHeadAttention
+from ml.transformers.models import AttentionBlock, MultiHeadAttention, PositionalEncoder
 
 
 class TestTransformers:
@@ -39,3 +41,20 @@ class TestTransformers:
         output = multi_head_attention(X)
 
         assert output.shape == (N, L, d_model)
+
+    def test_positional_encoding(self):
+        L = 2
+        d = 2
+        x = torch.zeros(size=(2, L, d))
+
+        positional_encoder = PositionalEncoder(L, d)
+        output = positional_encoder(x)
+
+        assert (output == torch.Tensor(
+            [
+                [
+                    [sin(0), cos(0)],
+                    [sin(1), cos(1/100)]
+                ]
+            ] * 2
+        )).all()

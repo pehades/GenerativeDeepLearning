@@ -1,4 +1,4 @@
-import math
+from math import sin, cos
 
 import torch
 import torch.nn as nn
@@ -59,3 +59,17 @@ class MultiHeadAttention(nn.Module):
         output = self.W_concat(attention_heads)
         return output
 
+
+class PositionalEncoder(nn.Module):
+
+    def __init__(self, L: int, d: int, n: int = 10_000):
+        super().__init__()
+        # k / n ^(2*i / d) k mexri L, i mexri d/2
+        self.P = torch.zeros(size=(L, d))
+        for k in range(L):
+            for i in range(int(d/2)):
+                self.P[k, 2*i] = sin(k / (n ** (2 * i / d)))
+                self.P[k, 2*i + 1] = cos(k / (n ** ((2 * i + 1) / d)))
+
+    def forward(self, x):
+        return x + self.P
