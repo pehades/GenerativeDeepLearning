@@ -54,7 +54,7 @@ class TestTransformers:
             [
                 [
                     [sin(0), cos(0)],
-                    [sin(1), cos(1/100)]
+                    [sin(1), cos(1/1)]
                 ]
             ] * 2
         )).all()

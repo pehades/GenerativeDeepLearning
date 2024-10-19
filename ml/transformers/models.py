@@ -69,7 +69,7 @@ class PositionalEncoder(nn.Module):
         for k in range(L):
             for i in range(int(d/2)):
                 self.P[k, 2*i] = sin(k / (n ** (2 * i / d)))
-                self.P[k, 2*i + 1] = cos(k / (n ** ((2 * i + 1) / d)))
+                self.P[k, 2*i + 1] = cos(k / (n ** (2 * i / d)))
 
     def forward(self, x):
         return x + self.P
