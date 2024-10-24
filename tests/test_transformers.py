@@ -3,7 +3,7 @@ from math import sin, cos
 import pytest
 import torch
 
-from ml.transformers.models import AttentionBlock, MultiHeadAttention, PositionalEncoder, Encoder
+from ml.transformers.models import AttentionBlock, MultiHeadAttention, PositionalEncoder, Encoder, Decoder
 
 
 class TestTransformers:
@@ -72,3 +72,21 @@ class TestTransformers:
         x = torch.zeros(size=(N, L))
         output = encoder(x)
         assert output.shape == (N, L, d)
+
+    def test_decoder(self):
+        L = 512
+        N = 4
+        d = 64
+        source_vocab_size = 100
+        target_vocab_size = 100
+        n_heads = 6
+
+        encoder = Encoder(source_vocab_size, L, d, n_heads)
+        decoder = Decoder(target_vocab_size, L, d, n_heads)
+
+        target = torch.zeros((N, L))
+        encoder_output = encoder(torch.zeros((N, L)))
+
+        output = decoder(encoder_output, target)
+
+        assert output.shape == (N, L, target_vocab_size)

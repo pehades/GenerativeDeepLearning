@@ -55,7 +55,7 @@ class MultiHeadAttention(nn.Module):
         )
         self.W_concat = nn.Linear(d_k * n_heads, d_model)
 
-    def forward(self, source, target: Optional[torch.Tensor] = None, mask: bool = True):
+    def forward(self, source, target: Optional[torch.Tensor] = None, mask: bool = False):
 
         if target is None:
             target = source
@@ -95,5 +95,24 @@ class Encoder(nn.Module):
 
         # x has dimension (N, L, dictionary_dim)
         x = self.embedding(x.to(torch.int64))
-        x = self.multi_head_attention(x)
-        return self.positional_encoder(x)
+        x = self.positional_encoder(x)
+        return self.multi_head_attention(x, mask=False)
+
+
+class Decoder(nn.Module):
+
+    def __init__(self, target_vocab_size: int, L: int, d: int, n_heads: int):
+        super().__init__()
+        self.input_embedding = nn.Embedding(target_vocab_size, d)
+        self.positional_encoder = PositionalEncoder(L, d)
+        self.masked_multi_head_attention = MultiHeadAttention(n_heads=n_heads, d_k=d, d_model=d)
+        self.multi_head_cross_attention = MultiHeadAttention(n_heads=n_heads, d_k=d, d_model=d)
+        self.fc_out = nn.Linear(d, target_vocab_size)
+        self.softmax = nn.Softmax()
+
+    def forward(self, source, target):
+
+        target = self.positional_encoder(self.input_embedding(target.to(torch.int64)))
+        target = self.masked_multi_head_attention(target, target, mask=True)
+        output = self.multi_head_cross_attention(source, target, mask=False)
+        return self.softmax(self.fc_out(output))
