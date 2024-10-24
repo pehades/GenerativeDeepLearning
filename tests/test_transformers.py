@@ -3,7 +3,7 @@ from math import sin, cos
 import pytest
 import torch
 
-from ml.transformers.models import AttentionBlock, MultiHeadAttention, PositionalEncoder
+from ml.transformers.models import AttentionBlock, MultiHeadAttention, PositionalEncoder, Encoder
 
 
 class TestTransformers:
@@ -58,3 +58,17 @@ class TestTransformers:
                 ]
             ] * 2
         )).all()
+
+    def test_encoder(self):
+
+        L = 512
+        N = 4
+        d = 64
+        dictionary_dim = 100
+        n_heads = 6
+
+        encoder = Encoder(dictionary_dim, L, d, n_heads)
+
+        x = torch.zeros(size=(N, L))
+        output = encoder(x)
+        assert output.shape == (N, L, d)

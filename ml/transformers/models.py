@@ -1,3 +1,4 @@
+import math
 from math import sin, cos
 
 import torch
@@ -73,3 +74,19 @@ class PositionalEncoder(nn.Module):
 
     def forward(self, x):
         return x + self.P
+
+
+class Encoder(nn.Module):
+
+    def __init__(self, dictionary_dim: int, L: int, d: int, n_heads: int):
+        super().__init__()
+        self.embedding = nn.Embedding(dictionary_dim, d)
+        self.multi_head_attention = MultiHeadAttention(n_heads=n_heads, d_k=d, d_model=d)
+        self.positional_encoder = PositionalEncoder(L, d)
+
+    def forward(self, x):
+
+        # x has dimension (N, L, dictionary_dim)
+        x = self.embedding(x.to(torch.int64))
+        x = self.multi_head_attention(x)
+        return self.positional_encoder(x)
