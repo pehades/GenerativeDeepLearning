@@ -1,5 +1,6 @@
 import math
 from math import sin, cos
+from typing import Optional
 
 import torch
 import torch.nn as nn
@@ -19,15 +20,18 @@ class AttentionBlock(nn.Module):
         self.W_V = nn.Linear(d_model, d_k)
         self.softmax = nn.Softmax(dim=1)
 
-    def forward(self, x, mask: bool = True):
+    def forward(self, source, target: Optional[torch.Tensor] = None, mask: bool = True):
+
+        if target is None:
+            target = source
 
         # x has shape (N, L, d_model)
 
-        q = self.W_Q(x)  # shape of (N, L, d_k)
-        k = self.W_K(x)  # shape of (N, L, d_k)
-        v = self.W_V(x)  # shape of (N, L, d_k)
+        q = self.W_Q(source)  # shape of (N, L, d_k)
+        k = self.W_K(source)  # shape of (N, L, d_k)
+        v = self.W_V(target)  # shape of (N, L, d_k)
 
-        L = x.shape[1]
+        L = source.shape[1]
         zeros = torch.zeros((L, L))
         if mask:
             mask_tensor = torch.triu(zeros - torch.inf, diagonal=1)
@@ -51,11 +55,14 @@ class MultiHeadAttention(nn.Module):
         )
         self.W_concat = nn.Linear(d_k * n_heads, d_model)
 
-    def forward(self, x, mask: bool = True):
+    def forward(self, source, target: Optional[torch.Tensor] = None, mask: bool = True):
+
+        if target is None:
+            target = source
 
         # x has shape (N, L, d_model)
         attention_heads = torch.cat(
-            [attention_head(x, mask)[0] for attention_head in self.attention_heads], dim=-1
+            [attention_head(source, target, mask=mask)[0] for attention_head in self.attention_heads], dim=-1
         )
         output = self.W_concat(attention_heads)
         return output
