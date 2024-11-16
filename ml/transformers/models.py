@@ -85,9 +85,9 @@ class PositionalEncoder(nn.Module):
 
 class Encoder(nn.Module):
 
-    def __init__(self, dictionary_dim: int, L: int, d: int, n_heads: int):
+    def __init__(self, source_vocab_size: int, L: int, d: int, n_heads: int):
         super().__init__()
-        self.embedding = nn.Embedding(dictionary_dim, d)
+        self.embedding = nn.Embedding(source_vocab_size, d)
         self.multi_head_attention = MultiHeadAttention(n_heads=n_heads, d_k=d, d_model=d)
         self.positional_encoder = PositionalEncoder(L, d)
 
@@ -108,7 +108,7 @@ class Decoder(nn.Module):
         self.masked_multi_head_attention = MultiHeadAttention(n_heads=n_heads, d_k=d, d_model=d)
         self.multi_head_cross_attention = MultiHeadAttention(n_heads=n_heads, d_k=d, d_model=d)
         self.fc_out = nn.Linear(d, target_vocab_size)
-        self.softmax = nn.Softmax()
+        self.softmax = nn.Softmax(dim=2)
 
     def forward(self, source, target):
 
@@ -116,3 +116,16 @@ class Decoder(nn.Module):
         target = self.masked_multi_head_attention(target, target, mask=True)
         output = self.multi_head_cross_attention(source, target, mask=False)
         return self.softmax(self.fc_out(output))
+
+
+class Transformer(nn.Module):
+
+    def __init__(self, source_vocab_size: int, target_vocab_size: int, L: int, d: int, n_heads: int):
+        super().__init__()
+        self.encoder = Encoder(source_vocab_size, L, d, n_heads)
+        self.decoder = Decoder(target_vocab_size, L, d, n_heads)
+
+    def forward(self, source, target):
+        encoder_output = self.encoder(source)
+        decoder_output = self.decoder(encoder_output, target)
+        return decoder_output
